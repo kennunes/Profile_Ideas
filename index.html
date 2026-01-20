@@ -76,7 +76,7 @@
         };
 
         const App = () => {
-            // Current User State - Updated with a more robust image URL
+            // Current User State - Updated with a different stable Unsplash URL
             const [currentUser, setCurrentUser] = useState({
                 id: 'u1',
                 name: 'Dr. Thandiwe Mabaso',
@@ -85,8 +85,8 @@
                 role: 'Principal',
                 school: 'Suntricity High School',
                 joinedDate: 'October 2023',
-                // Using a high-quality, stable Unsplash portrait of a professional African woman
-                avatar: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&q=80&w=400'
+                // Professional portrait of a confident African woman
+                avatar: 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=400'
             });
 
             // School Legal Data State
@@ -112,7 +112,8 @@
 
             // Fallback for image loading errors
             const handleImageError = (e) => {
-                e.target.src = 'https://ui-avatars.com/api/?name=Thandiwe+Mabaso&background=10b981&color=fff&size=128';
+                // If the primary photo fails, use a styled UI avatar instead of a generic broken image
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=10b981&color=fff&size=256&bold=true`;
             };
 
             // Team Members State
