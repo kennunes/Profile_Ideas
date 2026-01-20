@@ -37,36 +37,28 @@
         /**
          * Icon Helper for CDN environment
          * Uses a ref-based approach with lucide.createIcons for maximum reliability 
-         * across different CDN versions and browser environments.
          */
         const Icon = ({ name, size = 20, className = "" }) => {
             const iconRef = useRef(null);
 
             useEffect(() => {
                 if (iconRef.current && window.lucide) {
-                    // Convert PascalCase/camelCase to kebab-case for data-lucide attribute
                     const kebabName = name
                         .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-                        .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
                         .toLowerCase();
                     
-                    // Create a fresh icon element
                     const iconElement = document.createElement('i');
                     iconElement.setAttribute('data-lucide', kebabName);
-                    
-                    // Set basic dimensions to prevent layout shift
                     iconElement.style.width = `${size}px`;
                     iconElement.style.height = `${size}px`;
                     iconElement.style.display = 'inline-block';
                     
-                    // Apply classes
                     if (className) {
                         className.split(' ').filter(Boolean).forEach(cls => {
                             iconElement.classList.add(cls);
                         });
                     }
 
-                    // Replace content and trigger Lucide
                     iconRef.current.innerHTML = '';
                     iconRef.current.appendChild(iconElement);
 
@@ -84,22 +76,46 @@
         };
 
         const App = () => {
-            // Mock State for the Current Logged-in User
+            // Current User State - Updated with a more robust image URL
             const [currentUser, setCurrentUser] = useState({
                 id: 'u1',
-                name: 'Dr. Sarah Jenkins',
+                name: 'Dr. Thandiwe Mabaso',
                 email: 'principal@suntricity-high.edu',
+                phone: '+27 11 123 4567',
                 role: 'Principal',
                 school: 'Suntricity High School',
                 joinedDate: 'October 2023',
-                avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150'
+                // Using a high-quality, stable Unsplash portrait of a professional African woman
+                avatar: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&q=80&w=400'
             });
 
-            // Form State for Editing
-            const [editFormData, setEditFormData] = useState({ ...currentUser });
-            const [isEditingProfile, setIsEditingProfile] = useState(false);
+            // School Legal Data State
+            const [schoolData, setSchoolData] = useState({
+                name: 'Suntricity High School',
+                emisNumber: '700400123',
+                address: '12 Solar Way, Green District, Johannesburg, 2000',
+                learnerCount: '1,240',
+                staffCount: '85',
+                electricityAccount: 'ACC-8899-EL',
+                waterAccount: 'ACC-1122-WT',
+                district: 'Johannesburg East',
+                circuit: 'Circuit 04',
+                taxId: '9887766554'
+            });
 
-            // Mock State for School Members
+            const [editSchoolData, setEditSchoolData] = useState({ ...schoolData });
+            const [editFormData, setEditFormData] = useState({ ...currentUser });
+            
+            const [isEditingProfile, setIsEditingProfile] = useState(false);
+            const [isEditingSchool, setIsEditingSchool] = useState(false);
+            const [showSaveToast, setShowSaveToast] = useState(false);
+
+            // Fallback for image loading errors
+            const handleImageError = (e) => {
+                e.target.src = 'https://ui-avatars.com/api/?name=Thandiwe+Mabaso&background=10b981&color=fff&size=128';
+            };
+
+            // Team Members State
             const [members, setMembers] = useState([
                 { id: 'u2', name: 'Mark Thompson', email: 'bursar@suntricity-high.edu', role: 'Bursar', status: 'Active' },
                 { id: 'u3', name: 'Linda Mbeki', email: 'deputy@suntricity-high.edu', role: 'Deputy Principal', status: 'Active' },
@@ -110,23 +126,6 @@
             const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
             const [searchTerm, setSearchTerm] = useState('');
             const [activeTab, setActiveTab] = useState('profile');
-
-            // Mock Stats Data
-            const statsData = {
-                currentPower: "42.8 kW",
-                dailyYield: "185 kWh",
-                monthlySavings: "R 12,450",
-                carbonOffset: "2.4 Tons",
-                efficiency: 94,
-                chartData: [
-                    { month: 'Jan', val: 65 },
-                    { month: 'Feb', val: 80 },
-                    { month: 'Mar', val: 45 },
-                    { month: 'Apr', val: 90 },
-                    { month: 'May', val: 70 },
-                    { month: 'Jun', val: 55 },
-                ]
-            };
 
             const canManageMembers = ['Principal', 'Deputy Principal', 'Bursar'].includes(currentUser.role);
 
@@ -148,6 +147,14 @@
                 e.preventDefault();
                 setCurrentUser({ ...editFormData });
                 setIsEditingProfile(false);
+            };
+
+            const handleSaveSchool = (e) => {
+                e.preventDefault();
+                setSchoolData({ ...editSchoolData });
+                setIsEditingSchool(false);
+                setShowSaveToast(true);
+                setTimeout(() => setShowSaveToast(false), 3000);
             };
 
             const removeMember = (id) => {
@@ -177,19 +184,18 @@
                                 My Profile
                             </button>
                             <button 
+                                onClick={() => { setActiveTab('school'); setIsEditingSchool(false); }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'school' ? 'bg-emerald-500/10 text-emerald-400 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
+                            >
+                                <Icon name="School" />
+                                School Profile
+                            </button>
+                            <button 
                                 onClick={() => setActiveTab('team')}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'team' ? 'bg-emerald-500/10 text-emerald-400 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
                             >
                                 <Icon name="Users" />
                                 School Team
-                            </button>
-                            <div className="pt-4 pb-2 px-4 text-xs font-bold text-slate-600 uppercase tracking-wider">Resources</div>
-                            <button 
-                                onClick={() => setActiveTab('stats')}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'stats' ? 'bg-emerald-500/10 text-emerald-400 font-semibold' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'}`}
-                            >
-                                <Icon name="Activity" />
-                                School Stats
                             </button>
                         </nav>
 
@@ -202,19 +208,18 @@
                     </aside>
 
                     {/* Main Content */}
-                    <main className="flex-1 h-screen overflow-y-auto bg-[#020617]">
+                    <main className="flex-1 h-screen overflow-y-auto bg-[#020617] relative">
+                        {showSaveToast && (
+                            <div className="fixed top-20 right-8 z-50 bg-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 fade-in border border-emerald-400">
+                                <Icon name="CheckCircle2" size={20} />
+                                <span className="font-bold">Changes saved successfully!</span>
+                            </div>
+                        )}
+
                         <header className="h-16 bg-[#0f172a]/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
                             <div className="flex items-center gap-4">
-                                {(isEditingProfile || activeTab !== 'profile') && (
-                                    <button 
-                                        onClick={() => { setActiveTab('profile'); setIsEditingProfile(false); }}
-                                        className="p-2 hover:bg-slate-800 rounded-full text-slate-400 transition-colors md:hidden"
-                                    >
-                                        <Icon name="ArrowLeft" />
-                                    </button>
-                                )}
                                 <h2 className="text-lg font-semibold text-slate-100 uppercase tracking-wider text-sm">
-                                    {activeTab === 'profile' ? (isEditingProfile ? 'Edit Profile' : 'User Settings') : activeTab === 'team' ? 'Team Management' : 'Performance Dashboard'}
+                                    {activeTab === 'profile' ? 'Personal Information' : activeTab === 'school' ? 'School Legal Data' : 'Team Directory'}
                                 </h2>
                             </div>
                             <div className="flex items-center gap-4">
@@ -222,151 +227,264 @@
                                     <p className="text-sm font-bold leading-tight text-white">{currentUser.name}</p>
                                     <p className="text-xs text-slate-400">{currentUser.role}</p>
                                 </div>
-                                <div className="relative">
-                                    <img src={currentUser.avatar} alt="Profile" className="w-10 h-10 rounded-full border-2 border-emerald-500/30" />
-                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#0f172a] rounded-full"></div>
-                                </div>
+                                <img 
+                                    src={currentUser.avatar} 
+                                    onError={handleImageError}
+                                    alt="Profile" 
+                                    className="w-10 h-10 rounded-full border-2 border-emerald-500/30 object-cover" 
+                                />
                             </div>
                         </header>
 
                         <div className="p-8 max-w-5xl mx-auto pb-20">
+                            {/* Profile View/Edit */}
                             {activeTab === 'profile' && (
                                 <div className="space-y-6 fade-in">
                                     <section className="bg-[#0f172a] rounded-2xl shadow-xl border border-slate-800 overflow-hidden">
                                         <div className="h-32 bg-gradient-to-r from-emerald-600 to-teal-500 opacity-80"></div>
                                         <div className="px-8 pb-8">
-                                            <div className="relative -top-12 flex flex-col md:flex-row items-end gap-6">
-                                                <div className="relative group">
-                                                    <img 
-                                                        src={currentUser.avatar} 
-                                                        className="w-32 h-32 rounded-2xl border-4 border-[#0f172a] shadow-2xl object-cover" 
-                                                        alt="Avatar"
-                                                    />
-                                                    {isEditingProfile && (
-                                                        <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
-                                                            <Icon name="Camera" size={24} />
-                                                        </div>
-                                                    )}
+                                            <div className="relative -top-12 flex flex-col md:flex-row items-end gap-6 mb-4">
+                                                <img 
+                                                    src={currentUser.avatar} 
+                                                    onError={handleImageError}
+                                                    className="w-32 h-32 rounded-2xl border-4 border-[#0f172a] shadow-2xl object-cover" 
+                                                    alt="Avatar" 
+                                                />
+                                                <div className="pb-4 flex-1">
+                                                    <h1 className="text-3xl font-bold text-white">{currentUser.name}</h1>
+                                                    <p className="text-slate-400 font-medium">{currentUser.role} • {currentUser.school}</p>
                                                 </div>
-                                                {!isEditingProfile ? (
-                                                    <div className="pb-4 flex-1">
-                                                        <h1 className="text-3xl font-bold text-white">{currentUser.name}</h1>
-                                                        <div className="flex items-center gap-2 text-slate-400 mt-1">
-                                                            <Icon name="ShieldCheck" size={16} className="text-emerald-400" />
-                                                            <span className="font-medium">{currentUser.role}</span>
-                                                            <span>•</span>
-                                                            <span>Joined {currentUser.joinedDate}</span>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <div className="pb-4 flex-1">
-                                                        <h1 className="text-xl font-bold text-emerald-400 uppercase tracking-wider text-sm">Editing Profile</h1>
-                                                        <p className="text-slate-400 text-sm mt-1">Update your information across the platform.</p>
-                                                    </div>
-                                                )}
+                                                <button 
+                                                    onClick={() => { setEditFormData({ ...currentUser }); setIsEditingProfile(!isEditingProfile); }}
+                                                    className="mb-4 px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold flex items-center gap-2 transition-all border border-slate-700 shadow-lg shadow-slate-900/40"
+                                                >
+                                                    <Icon name={isEditingProfile ? "X" : "Edit3"} size={18} />
+                                                    {isEditingProfile ? "Cancel" : "Edit Profile"}
+                                                </button>
                                             </div>
 
-                                            {!isEditingProfile ? (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-                                                    <div className="space-y-4">
-                                                        <label className="block">
-                                                            <span className="text-sm font-semibold text-slate-400">Email Address</span>
-                                                            <div className="mt-1 flex items-center gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
-                                                                <Icon name="Mail" size={18} className="text-slate-500" />
-                                                                <input type="text" readOnly value={currentUser.email} className="bg-transparent w-full outline-none text-slate-200" />
-                                                            </div>
-                                                        </label>
-                                                        <label className="block">
-                                                            <span className="text-sm font-semibold text-slate-400">Institution</span>
-                                                            <div className="mt-1 flex items-center gap-3 p-3 bg-slate-950 border border-slate-800 rounded-xl">
-                                                                <Icon name="School" size={18} className="text-slate-500" />
-                                                                <input type="text" readOnly value={currentUser.school} className="bg-transparent w-full outline-none text-slate-200" />
-                                                            </div>
-                                                        </label>
-                                                    </div>
-                                                    <div className="bg-emerald-500/5 p-6 rounded-2xl border border-emerald-500/10 flex flex-col justify-between">
-                                                        <div>
-                                                            <h4 className="font-bold text-emerald-400 mb-2">Platform Access</h4>
-                                                            <p className="text-sm text-slate-400 leading-relaxed">
-                                                                As a {currentUser.role}, you have full administrative rights to manage staff invitations and school energy billing profiles.
-                                                            </p>
-                                                        </div>
-                                                        <button 
-                                                            onClick={() => { setEditFormData({ ...currentUser }); setIsEditingProfile(true); }}
-                                                            className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-500 transition-colors self-start shadow-lg shadow-emerald-900/20"
-                                                        >
-                                                            Edit Profile
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            ) : (
+                                            {isEditingProfile ? (
                                                 <form onSubmit={handleSaveProfile} className="space-y-6 mt-4">
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                         <div className="space-y-4">
-                                                            <div>
-                                                                <label className="block text-sm font-bold text-slate-400 mb-1.5">Full Name</label>
+                                                            <label className="block">
+                                                                <span className="text-sm font-bold text-slate-400 mb-1.5 block">Full Name</span>
                                                                 <div className="relative">
                                                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icon name="User" size={18} /></div>
-                                                                    <input 
-                                                                        type="text"
-                                                                        className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                                                                        value={editFormData.name}
-                                                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                                                                    />
+                                                                    <input type="text" className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 transition-all" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} />
                                                                 </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-sm font-bold text-slate-400 mb-1.5">Email Address</label>
+                                                            </label>
+                                                            <label className="block">
+                                                                <span className="text-sm font-bold text-slate-400 mb-1.5 block">Work Email</span>
                                                                 <div className="relative">
                                                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icon name="Mail" size={18} /></div>
-                                                                    <input 
-                                                                        type="email"
-                                                                        className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                                                                        value={editFormData.email}
-                                                                        onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                                                                    />
+                                                                    <input type="email" className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 transition-all" value={editFormData.email} onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} />
                                                                 </div>
-                                                            </div>
+                                                            </label>
                                                         </div>
                                                         <div className="space-y-4">
-                                                            <div>
-                                                                <label className="block text-sm font-bold text-slate-400 mb-1.5">School / Institution</label>
+                                                            <label className="block">
+                                                                <span className="text-sm font-bold text-slate-400 mb-1.5 block">Direct Phone</span>
                                                                 <div className="relative">
-                                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icon name="School" size={18} /></div>
-                                                                    <input 
-                                                                        type="text"
-                                                                        className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all"
-                                                                        value={editFormData.school}
-                                                                        onChange={(e) => setEditFormData({ ...editFormData, school: e.target.value })}
-                                                                    />
+                                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><Icon name="Phone" size={18} /></div>
+                                                                    <input type="tel" className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-white outline-none focus:border-emerald-500 transition-all" value={editFormData.phone} onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })} />
                                                                 </div>
-                                                            </div>
-                                                            <div>
-                                                                <label className="block text-sm font-bold text-slate-400 mb-1.5">Platform Role (Read Only)</label>
-                                                                <div className="relative">
-                                                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500/50"><Icon name="ShieldCheck" size={18} /></div>
-                                                                    <input 
-                                                                        type="text"
-                                                                        readOnly
-                                                                        className="w-full pl-10 pr-4 py-3 bg-slate-900 border border-slate-800 rounded-xl text-slate-500 cursor-not-allowed outline-none"
-                                                                        value={editFormData.role}
-                                                                    />
-                                                                </div>
+                                                            </label>
+                                                            <div className="pt-8">
+                                                                <button type="submit" className="w-full py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-900/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2">
+                                                                    <Icon name="Save" size={18} /> Update Details
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div className="flex items-center gap-3 pt-4 border-t border-slate-800">
-                                                        <button type="submit" className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/40 active:scale-95">
-                                                            <Icon name="Save" size={18} /> Save Changes
-                                                        </button>
-                                                        <button type="button" onClick={() => setIsEditingProfile(false)} className="px-6 py-2.5 bg-slate-800 text-slate-300 rounded-xl font-bold hover:bg-slate-700 transition-all">
-                                                            Cancel
-                                                        </button>
-                                                    </div>
                                                 </form>
+                                            ) : (
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    <div className="p-5 bg-slate-950/50 rounded-2xl border border-slate-800">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Email Address</p>
+                                                        <p className="font-semibold text-slate-200">{currentUser.email}</p>
+                                                    </div>
+                                                    <div className="p-5 bg-slate-950/50 rounded-2xl border border-slate-800">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Telephone</p>
+                                                        <p className="font-semibold text-slate-200">{currentUser.phone}</p>
+                                                    </div>
+                                                    <div className="p-5 bg-slate-950/50 rounded-2xl border border-slate-800">
+                                                        <p className="text-xs font-bold text-slate-500 uppercase mb-2">Member Since</p>
+                                                        <p className="font-semibold text-slate-200">{currentUser.joinedDate}</p>
+                                                    </div>
+                                                </div>
                                             )}
                                         </div>
                                     </section>
+                                </div>
+                            )}
+
+                            {/* School Legal Profile Editor */}
+                            {activeTab === 'school' && (
+                                <div className="space-y-6 fade-in">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <div>
+                                            <h1 className="text-2xl font-bold text-white">Institutional Data</h1>
+                                            <p className="text-slate-400">Maintain regulatory and legal information for the school.</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => { setEditSchoolData({ ...schoolData }); setIsEditingSchool(!isEditingSchool); }}
+                                            className={`px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg ${isEditingSchool ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-900/40'}`}
+                                        >
+                                            <Icon name={isEditingSchool ? "X" : "Edit3"} size={18} />
+                                            {isEditingSchool ? "Cancel Editing" : "Manage Data"}
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={handleSaveSchool} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <div className="lg:col-span-2 space-y-6">
+                                            {/* Core Identity */}
+                                            <div className="bg-[#0f172a] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+                                                <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-4 text-emerald-400 uppercase tracking-widest text-xs font-bold">
+                                                    <Icon name="Briefcase" size={16} /> 
+                                                    <span>General Information</span>
+                                                </div>
+                                                
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Name of School</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.name} onChange={(e) => setEditSchoolData({ ...editSchoolData, name: e.target.value })}
+                                                        />
+                                                    </label>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">EMIS Number</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.emisNumber} onChange={(e) => setEditSchoolData({ ...editSchoolData, emisNumber: e.target.value })}
+                                                        />
+                                                    </label>
+                                                </div>
+
+                                                <label className="block">
+                                                    <span className="text-sm font-bold text-slate-500 mb-1.5 block">Physical Address</span>
+                                                    <textarea 
+                                                        disabled={!isEditingSchool}
+                                                        rows="2"
+                                                        className={`w-full px-4 py-3 rounded-xl outline-none transition-all resize-none ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                        value={editSchoolData.address} onChange={(e) => setEditSchoolData({ ...editSchoolData, address: e.target.value })}
+                                                    />
+                                                </label>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Department District</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.district} onChange={(e) => setEditSchoolData({ ...editSchoolData, district: e.target.value })}
+                                                        />
+                                                    </label>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Educational Circuit</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.circuit} onChange={(e) => setEditSchoolData({ ...editSchoolData, circuit: e.target.value })}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            {/* Capacity and Utility */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="bg-[#0f172a] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+                                                    <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-2 text-emerald-400 uppercase tracking-widest text-xs font-bold">
+                                                        <Icon name="Users" size={16} /> 
+                                                        <span>Personnel & Capacity</span>
+                                                    </div>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Total Learners</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.learnerCount} onChange={(e) => setEditSchoolData({ ...editSchoolData, learnerCount: e.target.value })}
+                                                        />
+                                                    </label>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Staff Members</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.staffCount} onChange={(e) => setEditSchoolData({ ...editSchoolData, staffCount: e.target.value })}
+                                                        />
+                                                    </label>
+                                                </div>
+
+                                                <div className="bg-[#0f172a] p-8 rounded-3xl border border-slate-800 shadow-xl space-y-4">
+                                                    <div className="flex items-center gap-3 border-b border-slate-800 pb-4 mb-2 text-emerald-400 uppercase tracking-widest text-xs font-bold">
+                                                        <Icon name="Zap" size={16} /> 
+                                                        <span>Utility Accounts</span>
+                                                    </div>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Electricity Account</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.electricityAccount} onChange={(e) => setEditSchoolData({ ...editSchoolData, electricityAccount: e.target.value })}
+                                                        />
+                                                    </label>
+                                                    <label className="block">
+                                                        <span className="text-sm font-bold text-slate-500 mb-1.5 block">Water & Sewage</span>
+                                                        <input 
+                                                            disabled={!isEditingSchool}
+                                                            className={`w-full px-4 py-3 rounded-xl outline-none transition-all ${isEditingSchool ? 'bg-slate-950 border border-slate-800 focus:border-emerald-500 text-white' : 'bg-transparent border border-transparent text-slate-200 font-semibold p-0'}`}
+                                                            value={editSchoolData.waterAccount} onChange={(e) => setEditSchoolData({ ...editSchoolData, waterAccount: e.target.value })}
+                                                        />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            {/* Regulatory Card */}
+                                            <div className="bg-emerald-600 p-8 rounded-3xl shadow-xl shadow-emerald-900/20 text-white">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <Icon name="ShieldCheck" size={24} />
+                                                    <h3 className="font-bold text-lg leading-tight">Verification Status</h3>
+                                                </div>
+                                                <div className="space-y-4 opacity-90 text-sm">
+                                                    <div className="flex justify-between border-b border-white/20 pb-2">
+                                                        <span>School Verified</span>
+                                                        <span className="font-bold">Yes</span>
+                                                    </div>
+                                                    <div className="flex justify-between border-b border-white/20 pb-2">
+                                                        <span>SGB Approval</span>
+                                                        <span className="font-bold">Active</span>
+                                                    </div>
+                                                    <div className="flex justify-between border-b border-white/20 pb-2">
+                                                        <span>Tax Clearance</span>
+                                                        <span className="font-bold">Valid</span>
+                                                    </div>
+                                                </div>
+                                                <button type="button" className="w-full mt-6 py-3 bg-white/20 hover:bg-white/30 font-bold rounded-xl transition-all uppercase tracking-widest text-xs">
+                                                    View Documents
+                                                </button>
+                                            </div>
+
+                                            {/* Save Action */}
+                                            {isEditingSchool && (
+                                                <div className="bg-[#0f172a] p-8 rounded-3xl border border-emerald-500/30 shadow-xl animate-in zoom-in-95 duration-200">
+                                                    <h4 className="font-bold text-emerald-400 mb-2">Unsaved Changes</h4>
+                                                    <p className="text-xs text-slate-400 mb-6 leading-relaxed">
+                                                        Ensure all EMIS and Account numbers are accurate before committing updates.
+                                                    </p>
+                                                    <button type="submit" className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl shadow-xl shadow-emerald-900/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-2">
+                                                        <Icon name="Save" /> 
+                                                        Commit Data
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </form>
                                 </div>
                             )}
 
@@ -375,7 +493,7 @@
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                                         <div>
                                             <h1 className="text-2xl font-bold text-white">School Team</h1>
-                                            <p className="text-slate-400">Manage who has access to the {currentUser.school} platform.</p>
+                                            <p className="text-slate-400">Manage who has access to the {schoolData.name} platform.</p>
                                         </div>
                                         {canManageMembers && (
                                             <button onClick={() => setIsInviteModalOpen(true)} className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-500 transition-all shadow-lg shadow-emerald-900/20 active:scale-95">
@@ -422,97 +540,6 @@
                                                     ))}
                                                 </tbody>
                                             </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeTab === 'stats' && (
-                                <div className="space-y-6 fade-in">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h1 className="text-2xl font-bold text-white">Solar Insights</h1>
-                                            <p className="text-slate-400">Live performance for {currentUser.school}.</p>
-                                        </div>
-                                        <div className="flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                            <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">System Online</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><Icon name="Zap" size={20} /></div>
-                                                <span className="text-xs text-emerald-400 font-bold">+12%</span>
-                                            </div>
-                                            <p className="text-slate-500 text-xs font-bold uppercase">Current Power</p>
-                                            <p className="text-2xl font-bold text-white mt-1">{statsData.currentPower}</p>
-                                        </div>
-                                        <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400"><Icon name="TrendingUp" size={20} /></div>
-                                            </div>
-                                            <p className="text-slate-500 text-xs font-bold uppercase">Daily Yield</p>
-                                            <p className="text-2xl font-bold text-white mt-1">{statsData.dailyYield}</p>
-                                        </div>
-                                        <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400"><Icon name="DollarSign" size={20} /></div>
-                                            </div>
-                                            <p className="text-slate-500 text-xs font-bold uppercase">Savings</p>
-                                            <p className="text-2xl font-bold text-white mt-1">{statsData.monthlySavings}</p>
-                                        </div>
-                                        <div className="bg-[#0f172a] p-5 rounded-2xl border border-slate-800">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400"><Icon name="Leaf" size={20} /></div>
-                                            </div>
-                                            <p className="text-slate-500 text-xs font-bold uppercase">Offset</p>
-                                            <p className="text-2xl font-bold text-white mt-1">{statsData.carbonOffset}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        <div className="lg:col-span-2 bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl">
-                                            <h3 className="font-bold text-white mb-8">Monthly Generation (kWh)</h3>
-                                            <div className="flex items-end justify-between h-48 gap-2">
-                                                {statsData.chartData.map((data, i) => (
-                                                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                                                        <div 
-                                                            className="w-full bg-emerald-500/20 rounded-t-lg relative overflow-hidden group-hover:bg-emerald-500/40 transition-all"
-                                                            style={{ height: `${data.val}%` }}
-                                                        >
-                                                            <div className="absolute bottom-0 w-full bg-emerald-500 h-1/3 opacity-30 blur-xl translate-y-4" />
-                                                        </div>
-                                                        <span className="text-[10px] font-bold text-slate-500 uppercase">{data.month}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-6">
-                                            <div className="bg-[#0f172a] p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col items-center">
-                                                <h3 className="font-bold text-white mb-4 self-start">System Efficiency</h3>
-                                                <div className="relative flex items-center justify-center">
-                                                    <svg className="w-32 h-32 transform -rotate-90">
-                                                        <circle cx="64" cy="64" r="58" stroke="#1e293b" strokeWidth="12" fill="transparent" />
-                                                        <circle 
-                                                            cx="64" cy="64" r="58" stroke="#10b981" strokeWidth="12" fill="transparent" 
-                                                            strokeDasharray={364} strokeDashoffset={364 - (364 * statsData.efficiency) / 100} 
-                                                        />
-                                                    </svg>
-                                                    <div className="absolute flex flex-col items-center">
-                                                        <span className="text-2xl font-bold text-white">{statsData.efficiency}%</span>
-                                                        <span className="text-[10px] text-slate-500 font-bold uppercase">Optimal</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-emerald-600 p-6 rounded-2xl shadow-xl shadow-emerald-900/20 text-white relative overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12"><Icon name="Sun" size={80} /></div>
-                                                <h3 className="font-bold mb-2">Solar Forecast</h3>
-                                                <p className="text-sm opacity-90 leading-tight">Clear skies expected tomorrow. Predicted +15% generation.</p>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
